@@ -61,13 +61,13 @@ func (p *PercentPicking) NewRqst() bool {
         if p.okPercent < p.TargetPercent {
           // this request shuld be marked as failed to keep error rate
           p.myStat[p.curPointer] = false
+          // to make behavior less traight - set the random aitem to failed
+          p.myStat[rand.Intn(arraySize)] = false
         } else {
           // this request marked as SUCCESS (200)
           p.myStat[p.curPointer] = true
         }
-        // to make behavior less traight - set the random aitem to failed
-        p.myStat[rand.Intn(arraySize)] = false
-        
+
         return p.myStat[p.curPointer]
 }
 // end of error section
