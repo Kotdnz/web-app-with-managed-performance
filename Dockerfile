@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 # Build the Go app
-RUN go build -o main rate_loader.go
+RUN go build -o main web_service_1.go
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
