@@ -13,6 +13,7 @@ import (
    "strconv"
    "encoding/json"
    "time"
+   "math/rand"
    "./ratecounter"
 )
 
@@ -24,7 +25,7 @@ type AppState struct {
    Saturation int   // he state of being saturated or the action of saturating. For our example - max rate per sec
 }
 
-const arraySize = 16384
+const arraySize = 1024
 
 // section to serve target error rate
 type PercentPicking struct {
@@ -64,6 +65,9 @@ func (p *PercentPicking) NewRqst() bool {
           // this request marked as SUCCESS (200)
           p.myStat[p.curPointer] = true
         }
+        // to make behavior less traight - set the random aitem to failed
+        p.myStat[rand.Intn(arraySize)] = false
+        
         return p.myStat[p.curPointer]
 }
 // end of error section
