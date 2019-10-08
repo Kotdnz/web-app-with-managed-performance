@@ -32,7 +32,7 @@ func printRate(){
 func curl(s string) {
 	resp, err := http.Get(s)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		fmt.Printf("Error: Something went wrong - can't Get the URL")
 	}
 	if resp.StatusCode == 200 {
 		okSum += 1
