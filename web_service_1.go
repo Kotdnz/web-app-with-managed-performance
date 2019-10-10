@@ -147,7 +147,7 @@ func myWorkerHandler(w http.ResponseWriter, r *http.Request) {
 // main function
 func main() {
   // prometeus
-  phm := InitPrometheusHttpMetric("myapp", prometheus.LinearBuckets(0, 5, 20))
+  phm := InitPrometheusHttpMetric("myWorker", prometheus.LinearBuckets(0, 5, 20))
   http.Handle("/metrics", promhttp.Handler())
 
   // Our latency - 10ms + overhead
