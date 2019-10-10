@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ewf-web-app
+  labels:
+    app: ewf-web-app
+spec:
+  selector:
+    matchLabels:
+      app: ewf-web-app
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: ewf-web-app
+    spec:
+      containers:
+      - name: web-app
+        image: nexus-aws.dhl-ewf.kyiv.epam.com:5000/hackathon/webapp:latest
+        ports:
+        - name: http
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: "http"
+            scheme: HTTP
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: "http"
+            scheme: HTTP
