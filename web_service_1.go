@@ -14,8 +14,57 @@ import (
    "encoding/json"
    "time"
    "math/rand"
-   "./ratecounter"
+   "os"
+   "log"
+   // third-party libs
+   "github.com/paulbellamy/ratecounter"
+   // prometeus section
+   // https://medium.com/@zhimin.wen/custom-prometheus-metrics-for-apps-running-in-kubernetes-498d69ada7aa
+   "github.com/prometheus/client_golang/prometheus"
+   "github.com/prometheus/client_golang/prometheus/promauto"
+   "github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+type PrometheusHttpMetric struct {
+	Prefix                string
+	ClientConnected       prometheus.Gauge
+	TransactionTotal      *prometheus.CounterVec
+	ResponseTimeHistogram *prometheus.HistogramVec
+	Buckets               []float64
+}
+
+func InitPrometheusHttpMetric(prefix string, buckets []float64) *PrometheusHttpMetric {
+	phm := PrometheusHttpMetric{
+		Prefix: prefix,
+		ClientConnected: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: prefix + "_client_connected",
+			Help: "Number of active client connections",
+		}),
+		TransactionTotal: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: prefix + "_requests_total",
+			Help: "total HTTP requests processed",
+		}, []string{"code", "method"},
+		),
+		ResponseTimeHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
+			Name:    prefix + "_response_time",
+			Help:    "Histogram of response time for handler",
+			Buckets: buckets,
+		}, []string{"handler", "method"}),
+	}
+
+	return &phm
+}
+
+func (phm *PrometheusHttpMetric) WrapHandler(handlerLabel string, handlerFunc http.HandlerFunc) http.Handler {
+	handle := http.HandlerFunc(handlerFunc)
+	wrappedHandler := promhttp.InstrumentHandlerInFlight(phm.ClientConnected,
+		promhttp.InstrumentHandlerCounter(phm.TransactionTotal,
+			promhttp.InstrumentHandlerDuration(phm.ResponseTimeHistogram.MustCurryWith(prometheus.Labels{"handler": handlerLabel}),
+				handle),
+		),
+	)
+	return wrappedHandler
+}
 
 // The applicateion beheviour
 type AppState struct {
@@ -26,6 +75,10 @@ type AppState struct {
 }
 
 const arraySize = 1024
+
+var counter ratecounter.RateCounter
+var myAppState AppState
+var picker PercentPicking
 
 // section to serve target error rate
 type PercentPicking struct {
@@ -72,18 +125,41 @@ func (p *PercentPicking) NewRqst() bool {
 }
 // end of error section
 
+func myWorkerHandler(w http.ResponseWriter, r *http.Request) {
+  // Record an event happening
+  counter.Incr(1)
+  // check if not axceed the rate and error rate fewer
+  if counter.Rate() <= int64(myAppState.Rate) && picker.NewRqst() == true {
+    // sleep for latency
+    time.Sleep(time.Duration(myAppState.Latency) * time.Millisecond)
+    // return Ok 200
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, "Worker Ok! \nCurrent request rate per second %d \n", counter.Rate())
+    fmt.Fprintf(w, "Current error rate %d from expected %d ",
+       picker.okPercent, picker.TargetPercent)
+  } else {
+    // return 500
+    w.WriteHeader(http.StatusInternalServerError)
+    fmt.Fprintf(w, "Worker died! ERROR 500")
+  }
+}
+
 // main function
 func main() {
-  // We're recording marks-per-1second
-  counter := ratecounter.NewRateCounter(1 * time.Second)
+  // prometeus
+  phm := InitPrometheusHttpMetric("myapp", prometheus.LinearBuckets(0, 5, 20))
+  http.Handle("/metrics", promhttp.Handler())
 
   // Our latency - 10ms + overhead
   // Over 50 req / sec we will return 500
   // Over 120 req / sec we stop the reply
-  myAppState := AppState{ 100, 20, 10, 50 }
+  myAppState = AppState{ 100, 20, 10, 50 }
+
+  // We're recording marks-per-1second
+  counter = *ratecounter.NewRateCounter(1 * time.Second)
 
   // initialize the error picker percentage
-  picker := NewPercentPicking(myAppState.Errors)
+  picker = *NewPercentPicking(myAppState.Errors)
 
   // handling main page
   // output the current stage after the modification, if exist
@@ -145,24 +221,7 @@ func main() {
   })
 
   // main worker function with timeout for Latency
-  http.HandleFunc("/worker", func(w http.ResponseWriter, r *http.Request){
-    // Record an event happening
-    counter.Incr(1)
-    // check if not axceed the rate and error rate fewer
-    if counter.Rate() <= int64(myAppState.Rate) && picker.NewRqst() == true {
-      // sleep for latency
-      time.Sleep(time.Duration(myAppState.Latency) * time.Millisecond)
-      // return Ok 200
-      w.WriteHeader(http.StatusOK)
-      fmt.Fprintf(w, "Worker Ok! \nCurrent request rate per second %d \n", counter.Rate())
-      fmt.Fprintf(w, "Current error rate %d from expected %d ",
-         picker.okPercent, picker.TargetPercent)
-    } else {
-      // return 500
-      w.WriteHeader(http.StatusInternalServerError)
-      fmt.Fprintf(w, "Worker died! ERROR 500")
-    }
-  })
+  http.Handle("/worker", phm.WrapHandler("myWorker", myWorkerHandler))
 
   // check if our app able to handle the requests
   http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request){
@@ -190,6 +249,16 @@ func main() {
     }
   })
 
-  fmt.Println("Listening on port 8080");
-  fmt.Println(http.ListenAndServe(":8080", nil));
+  port := os.Getenv("LISTENING_PORT")
+
+  if port == "" {
+    port = "8080"
+  }
+
+  log.Printf("listening on port:%s", port)
+
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		log.Fatalf("Failed to start server:%v", err)
+	}
 }

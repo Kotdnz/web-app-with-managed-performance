@@ -1,28 +1,15 @@
-# Dockerfile References: https://docs.docker.com/engine/reference/builder/
+FROM golang:alpine AS builder
+RUN apk update && apk add --no-cache git
+COPY . $GOPATH/src
+WORKDIR $GOPATH/src
+RUN go get -d -v
+RUN go build -o /tmp/webapp *.go
 
-# Start from the latest golang base image
-FROM golang:latest
-
-# Add Maintainer Info
-LABEL maintainer="Kostiantyn Nikonenko <Kostiantyn_Nikonenko@gepam.com>"
-
-# Set the Current Working Directory inside the container
+FROM alpine
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && mkdir -p /app
+COPY --from=builder /tmp/webappp /app
+RUN chmod a+rx /app/webapp
+USER appuser
 WORKDIR /app
-
-# Copy go mod and sum files
-# COPY go.mod go.sum ./
-
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
-# RUN go mod download
-
-# Copy the source from the current directory to the Working Directory inside the container
-COPY . .
-
-# Build the Go app
-RUN go build -o main web_service_1.go
-
-# Expose port 8080 to the outside world
-EXPOSE 8080
-
-# Command to run the executable
-CMD ["./main"]
+ENV LISTENING_PORT 8080
+CMD ["./webapp"]
