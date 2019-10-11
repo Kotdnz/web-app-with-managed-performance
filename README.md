@@ -1,16 +1,19 @@
 # web-app-with-managed-performance
 
 This is a simple web application with a fixed performance:
-- latency
-- limited rates requests before health went down sending 500
-- limited rate before live-check went down
+- latency (by default 100ms)
+- error rate (by default 10% with buffer 1024 requests)
+- limited rates requests before health go down by sending 500 (by default 20)
+- limited rate before live-check go down (by default 50)
 
-The application should be:
+The application is:
 - written on Go ;)
-- adjustable to our needs on the fly
+- adjustable to our needs on the fly <url>http://hostname:31848?latency=100&rate=20&errors=10&saturation=50</url>
 - container/k8s ready
-- has the custom metrics for Prometeus according https://medium.com/@zhimin.wen/custom-prometheus-metrics-for-apps-running-in-kubernetes-498d69ada7aa
+- has the custom metrics for Prometheus according https://medium.com/@zhimin.wen/custom-prometheus-metrics-for-apps-running-in-kubernetes-498d69ada7aa -> <url>http://hostname:31848/metrics</url>
 
 # rate_loader
 For validation if our metrics is configured properly we using second tools: rate_loader.go
-<p>Usage: ./rate_loader -url=http://localhost:8080/worker -rate=20
+<p>Usage: <br><code>./rate_loader -url=http://hostname:318484/worker -rate=20</code>
+
+<p><p>Run <code>go get -d -v</code> to download the de
