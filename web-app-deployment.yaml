@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: web-app
-        image: nexus-aws.dhl-ewf.kyiv.epam.com:5000/hackathon/webapp:latest
+        image: nexus-aws.dhl-ewf.kyiv.epam.com:5000/hackathon/webapp:v2.0
         imagePullPolicy: IfNotPresent
         env:
           - name: LISTENING_PORT
