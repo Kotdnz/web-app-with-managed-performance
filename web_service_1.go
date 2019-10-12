@@ -1,11 +1,13 @@
 // EPAM DevOps_Hackathon_2019
-// October 3, 2019
-// rev 1.0
+// October 13, 2019
+// rev 2.0
 // Kostiantyn_Nikonenko@epam.com
 // Web service with adjustable performance
 // to check how SRE monitoring is working
 
 package main
+
+const char = "v2.0"
 
 import (
    "net/http"
@@ -186,7 +188,7 @@ func main() {
       val, err := strconv.Atoi(errors);
       if err == nil && val >= 1 {
         myAppState.Errors = val
-        picker.TargetPercent = 100-val
+        picker.TargetPercent = val
       }
     }
     if saturation := r.FormValue("saturation"); saturation != "" {
