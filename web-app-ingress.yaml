@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: web-app-ingress
+  namespace: ewf-space
   annotations:
     kubernetes.io/ingress.class: nginx
 spec:

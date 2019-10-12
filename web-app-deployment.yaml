@@ -1,7 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ewf-space
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ewf-web-app
+  namespace: ewf-space
   labels:
     app: ewf-web-app
 spec:
@@ -34,3 +40,20 @@ spec:
             path: /ready
             port: "http"
             scheme: HTTP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ewf-web-app
+  namespace: ewf-space
+  labels:
+    app: ewf-web-app
+spec:
+  type: NodePort
+  selector:
+    app: ewf-web-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      name: http
