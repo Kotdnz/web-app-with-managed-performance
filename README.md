@@ -13,9 +13,9 @@ The application is:
 - has the custom metrics for Prometheus according https://medium.com/@zhimin.wen/custom-prometheus-metrics-for-apps-running-in-kubernetes-498d69ada7aa -> <url>http://hostname:31848/metrics</url>
 
 In additional in the codebase the full set of the yaml files to create the own cluster.
-namespace ingress-nginx - for ingress-nginx and monitoring (prometeheus and grafana)
-namespace ewf-space - for app.
-To allow the communication between namespaces required ingress and roles.
+<br>namespace ingress-nginx - for ingress-nginx and monitoring (prometeheus and grafana)
+<br>namespace ewf-space - for app.
+<br>To allow the communication between namespaces required ingress and roles.
 
 # rate_loader
 For validation if our metrics is configured properly we using second tools: 
