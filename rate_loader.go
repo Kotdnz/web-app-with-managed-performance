@@ -1,129 +1,78 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"sync"
+	"flag"
 	"time"
-
-	"github.com/Kotdnz/web-app-with-managed-performance/ratecounter"
+  "net/http"
+  "./ratecounter"
 )
 
-var (
-	urlPtr  string
-	ratePtr int
-)
+// max thread
+var curThread int
+var curRate int64
+var okSum int64
+var erSum int64
 
-type loader struct {
-	url                   string
-	mu                    sync.RWMutex
-	curThread             int
-	curRate, okSum, erSum int64
-}
-
-func (rp *loader) String() string {
-	rp.mu.RLock()
-	defer rp.mu.RUnlock()
-	return fmt.Sprintf("Updated every 5 sec\n"+
-		" - Current request rate per second: %d\n"+
-		" - Current threads: %d\n"+
-		" - Amount 200: %d, amount 500: %d\n",
-		rp.curRate, rp.curThread, rp.okSum, rp.erSum)
-}
-
-func (rp *loader) Reset() {
-	rp.mu.Lock()
-	defer rp.mu.Unlock()
-	rp.okSum = 0
-	rp.erSum = 0
-}
-
-func (rp *loader) update(s string) {
-	rp.mu.Lock()
-	defer rp.mu.Unlock()
-
-	switch s {
-	case "err":
-		rp.erSum++
-	case "ok":
-		rp.okSum++
-	case "thread-":
-		if rp.curThread > 0 {
-			rp.curThread--
-		}
-	case "thread+":
-		rp.curThread++
-	default:
-		// skip other string
+// continues print the pates
+func printRate(){
+	for {
+		time.Sleep(time.Second * 5)
+		fmt.Printf("Updated every 5 sec\n" +
+			         " - Current request rate per second: %d\n" +
+							 " - Current threads: %d\n" +
+							 " - Amount 200: %d, amount 500: %d\n",
+							 curRate, curThread, okSum, erSum)
+		erSum = 0
+    okSum = 0
 	}
 }
 
-func (rp *loader) Curl() {
-	if rp.curThread > 1023 {
-		return
-	}
-
-	resp, err := http.Get(rp.url)
-
-	defer rp.update("thread-")
-
+// thread function to curl
+func curl(s string) {
+	resp, err := http.Get(s)
 	if err != nil {
-		log.Println("Error: Something went wrong - can't Get the URL")
-		rp.update("err")
-		return
+		fmt.Printf("Error: Something went wrong - can't Get the URL")
 	}
-
-	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		rp.update("ok")
-		return
+		okSum += 1
+	} else {
+		erSum += 1
 	}
-	rp.update("err")
-}
-
-func (rp *loader) CurrRate(r int64) {
-	rp.mu.Lock()
-	defer rp.mu.Unlock()
-
-	rp.curRate = r
-}
-
-func init() {
-	flag.StringVar(&urlPtr, "url", "", "specify target url")
-	flag.IntVar(&ratePtr, "rate", 0, "specify rate")
-	flag.Parse()
+	resp.Body.Close()
+	if curThread > 0 {
+		curThread -= 1
+	}
 }
 
 func main() {
-	if urlPtr == "" || ratePtr <= 0 {
-		log.Panicln("wrong url", urlPtr, "or rate", ratePtr)
-		os.Exit(1)
+	// parse command line
+	urlPtr := flag.String("url", "", "a string")
+	ratePtr := flag.Int("rate", 0, "an int")
+	flag.Parse()
+	if *urlPtr == "" || int(*ratePtr) <= 0 || int(*ratePtr) > 300 {
+		fmt.Printf("\nFlags specification error: %s\n" +
+			         "Usage: ./rate_loader -url=http://localhost:8080/worker -rate=20\n\n", flag.Args())
+		return
+	} else {
+		fmt.Printf("Target host url: %s rate %d\n\n", *urlPtr, *ratePtr)
 	}
-	// init rate counter
+  // init rate counter
 	counter := ratecounter.NewRateCounter(1 * time.Second)
-
-	tickerPrint := time.NewTicker(5 * time.Second)
-	// run ratePtr rutines every second
-	tickerCurl := time.NewTicker(1 * time.Second)
-	loadPrinter := loader{
-		url: urlPtr,
-	}
-
-	for {
-		select {
-		case <-tickerPrint.C:
-			fmt.Println(loadPrinter.String())
-			loadPrinter.Reset()
-		case <-tickerCurl.C:
-			for i := 0; i <= ratePtr; i++ {
-				counter.Incr(1)
-				loadPrinter.CurrRate(counter.Rate())
-				loadPrinter.update("thread+")
-				go loadPrinter.Curl()
-			}
-		}
-	}
+  // init thread counter
+	curThread = 0
+	// show the current rate every 5 sec
+	go printRate()
+	// main cycle
+  for {
+		if curThread < 1023{
+			curThread += 1
+			counter.Incr(1)
+			curRate = counter.Rate()
+			// from command prompt read requests rate to calculate the timeout
+			// sec / rate
+	    time.Sleep(1000 * time.Millisecond / time.Duration(*ratePtr))
+	    go curl(*urlPtr)
+ 		}
+  }
 }
