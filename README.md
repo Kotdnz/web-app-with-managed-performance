@@ -16,9 +16,10 @@ In additional in the codebase the full set of the yaml files to create the own c
 <br>namespace ingress-nginx - for ingress-nginx and monitoring (prometeheus and grafana)
 <br>namespace ewf-space - for app.
 <br>To allow the communication between namespaces required ingress and roles.
+<br>Horizontal Pod Autoscale with Custom Prometheus Metrics <url>https://itnext.io/horizontal-pod-autoscale-with-custom-metrics-8cb13e9d475</url>
 
 # rate_loader
-For validation if our metrics is configured properly we using second tools: 
+For validation if our metrics is configured properly we using second tools:
 rate_loader.go
 <p>Usage: <br><code>./rate_loader -url=http://hostname:318484/worker -rate=20</code>
 
