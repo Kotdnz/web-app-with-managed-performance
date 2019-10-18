@@ -7,8 +7,6 @@
 
 package main
 
-const char = "v2.0"
-
 import (
    "net/http"
    "fmt"
@@ -77,6 +75,7 @@ type AppState struct {
 }
 
 const arraySize = 1024
+const appVer = "v2.0"
 
 var counter ratecounter.RateCounter
 var myAppState AppState
@@ -202,7 +201,7 @@ func main() {
 
     // output the help
     curPar, _ := json.Marshal(myAppState)
-    fmt.Fprintf(w, "<p> EPAM DevOps Hackathon 2019 <p>")
+    fmt.Fprintf(w, "<p> EPAM DevOps Hackathon 2019, rev %s <p>", string(appVer))
     fmt.Fprintf(w, "<p> Current configuration is: %s ", string(curPar))
     fmt.Fprintf(w, "<br> Our latency for WORKER - %d ms + overhead" +
                    "<br> Over %d req / sec WORKER and health will return 500" +
