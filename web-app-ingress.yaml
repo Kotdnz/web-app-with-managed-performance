@@ -7,7 +7,7 @@ metadata:
     kubernetes.io/ingress.class: nginx
 spec:
   rules:
-  - host: ECSD00300AF6.epam.com
+  - host: ecsd00300af6.epam.com
     http:
       paths:
       - path: /

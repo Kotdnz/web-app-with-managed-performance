@@ -154,25 +154,25 @@ func main() {
   // Our latency + overhead
   // Over 200 req / sec we will return 500
   // Over 500 req / sec we stop the reply
-  envRate := os.Getenv("RATE")
-  envLat  := os.Getenv("LATENCY")
-  envErr  := os.Getenv("ERRORRATE")
-  envSat  := os.Getenv("SATURATION")
+  envRate, _  := strconv.Atoi(os.Getenv("RATE"))
+  envLat, _  := strconv.Atoi(os.Getenv("LATENCY"))
+  envErr, _  := strconv.Atoi(os.Getenv("ERRORRATE"))
+  envSat, _  := strconv.Atoi(os.Getenv("SATURATION"))
 
-  if envRate == "" {
-    envRate = "200"
+  if envRate == 0 {
+    envRate = 200
   }
-  if envLat == "" {
-    envLat = "100"
+  if envLat == 0 {
+    envLat = 100
   }
-  if envErr == "" {
-    envErr = "10"
+  if envErr == 0 {
+    envErr = 10
   }
-  if envSat == "" {
-    envSat = "500"
+  if envSat == 0 {
+    envSat = 500
   }
 
-  myAppState = AppState{ envLat, envRate, envErr, envSat }
+  myAppState = AppState{ int64(envLat), envRate, envErr, envSat }
 
   // We're recording marks-per-1second
   counter = *ratecounter.NewRateCounter(1 * time.Second)
