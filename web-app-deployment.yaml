@@ -22,11 +22,19 @@ spec:
     spec:
       containers:
       - name: web-app
-        image: nexus-aws.dhl-ewf.kyiv.epam.com:5000/hackathon/webapp:v2.0
+        image: nexus-aws.dhl-ewf.kyiv.epam.com:5000/hackathon/webapp:v2.1
         imagePullPolicy: IfNotPresent
         env:
           - name: LISTENING_PORT
             value: "8080"
+          - name: RATE
+            value: "200"
+          - name: LATENCY
+            value: "100"
+          - name: ERRORRATE
+            value: "10"
+          - name: SATURATION
+            value: "500"
         ports:
         - name: http
           containerPort: 8080

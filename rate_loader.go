@@ -1,3 +1,8 @@
+// EPAM DevOps_Hackathon_2019
+// October 15, 2019
+// rev 1.0
+// Kostiantyn_nikonenko@epam.com
+
 package main
 
 import (
@@ -5,7 +10,7 @@ import (
 	"flag"
 	"time"
   "net/http"
-  "./ratecounter"
+  "github.com/paulbellamy/ratecounter"
 )
 
 // max thread
@@ -52,7 +57,7 @@ func main() {
 	flag.Parse()
 	if *urlPtr == "" || int(*ratePtr) <= 0 || int(*ratePtr) > 300 {
 		fmt.Printf("\nFlags specification error: %s\n" +
-			         "Usage: ./rate_loader -url=http://localhost:8080/worker -rate=20\n\n", flag.Args())
+			         "Usage: ./rate_loader -url=http://localhost:8080/worker -rate=200\n\n", flag.Args())
 		return
 	} else {
 		fmt.Printf("Target host url: %s rate %d\n\n", *urlPtr, *ratePtr)

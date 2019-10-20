@@ -1,3 +1,6 @@
+#
+# revision 2 from 20-Oct-2019
+#
 FROM golang:alpine AS builder
 RUN apk update && apk add --no-cache git
 COPY web_service_1.go $GOPATH/src
@@ -12,4 +15,8 @@ RUN chmod a+rx /app/webapp
 USER appuser
 WORKDIR /app
 ENV LISTENING_PORT 8080
+ENV RATE 200
+ENV LATENCY 100
+ENV ERRORRATE 10
+ENV SATURATION 500
 CMD ["./webapp"]

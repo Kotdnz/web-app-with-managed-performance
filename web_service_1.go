@@ -1,6 +1,6 @@
 // EPAM DevOps_Hackathon_2019
 // October 13, 2019
-// rev 2.0
+// rev 2.1
 // Kostiantyn_Nikonenko@epam.com
 // Web service with adjustable performance
 // to check how SRE monitoring is working
@@ -75,7 +75,7 @@ type AppState struct {
 }
 
 const arraySize = 1024
-const appVer = "v2.0"
+const appVer = "v2.1"
 
 var counter ratecounter.RateCounter
 var myAppState AppState
@@ -151,10 +151,28 @@ func main() {
   phm := InitPrometheusHttpMetric("myWorker", prometheus.LinearBuckets(0, 5, 20))
   http.Handle("/metrics", promhttp.Handler())
 
-  // Our latency - 10ms + overhead
-  // Over 50 req / sec we will return 500
-  // Over 120 req / sec we stop the reply
-  myAppState = AppState{ 100, 20, 10, 50 }
+  // Our latency + overhead
+  // Over 200 req / sec we will return 500
+  // Over 500 req / sec we stop the reply
+  envRate := os.Getenv("RATE")
+  envLat  := os.Getenv("LATENCY")
+  envErr  := os.Getenv("ERRORRATE")
+  envSat  := os.Getenv("SATURATION")
+
+  if envRate == "" {
+    envRate = "200"
+  }
+  if envLat == "" {
+    envLat = "100"
+  }
+  if envErr == "" {
+    envErr = "10"
+  }
+  if envSat == "" {
+    envSat = "500"
+  }
+
+  myAppState = AppState{ envLat, envRate, envErr, envSat }
 
   // We're recording marks-per-1second
   counter = *ratecounter.NewRateCounter(1 * time.Second)
@@ -165,7 +183,7 @@ func main() {
   // handling main page
   // output the current stage after the modification, if exist
   // the definition above can be applied by the following
-  // ?latency=10&rate=50&errors=10&saturation=120
+  // ?latency=100&rate=200&errors=10&saturation=500
   //
   http.HandleFunc("/" , func(w http.ResponseWriter, r *http.Request) {
     // Record an event happening
@@ -206,7 +224,7 @@ func main() {
     fmt.Fprintf(w, "<br> Our latency for WORKER - %d ms + overhead" +
                    "<br> Over %d req / sec WORKER and health will return 500" +
                    "<br> Over %d req / sec live will return 500", myAppState.Latency, myAppState.Rate, myAppState.Saturation)
-    fmt.Fprintf(w, "<br> URL to adjust: http://%s?latency=100&rate=20&errors=10&saturation=50", r.Host)
+    fmt.Fprintf(w, "<br> URL to adjust: http://%s?latency=100&rate=200&errors=10&saturation=500", r.Host)
     fmt.Fprintf(w, "<p> Main WORKER <a href=\"http://%s/worker\">link</a> to apply the load. This page have %d error rate.", r.Host, myAppState.Errors)
     fmt.Fprintf(w, "<br> Ready check <a href=\"http://%s/ready\">link</a> - 200 while not exceed Rate limit", r.Host)
     fmt.Fprintf(w, "<br> Live check <a href=\"http://%s/live\">link</a> - 200 while not exceed Saturation limit", r.Host)
