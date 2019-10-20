@@ -55,7 +55,7 @@ func main() {
 	urlPtr := flag.String("url", "", "a string")
 	ratePtr := flag.Int("rate", 0, "an int")
 	flag.Parse()
-	if *urlPtr == "" || int(*ratePtr) <= 0 || int(*ratePtr) > 300 {
+	if *urlPtr == "" || int(*ratePtr) <= 0 || int(*ratePtr) > 3000 {
 		fmt.Printf("\nFlags specification error: %s\n" +
 			         "Usage: ./rate_loader -url=http://localhost:8080/worker -rate=200\n\n", flag.Args())
 		return
