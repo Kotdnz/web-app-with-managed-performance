@@ -20,8 +20,8 @@ In additional in the codebase the full set of the yaml files to create the own c
 
 # rate_loader
 For validation if our metrics is configured properly we using second tools
-<br>first version
-<p>Usage: <br><code>./rate_loader -url=http://hostname:318484/worker -rate=20</code>
-<br>alternative version
-<p>Usage: <br><code>./rate_loader_v2 -url=http://hostname:318484/worker -rate=20</code>
+<p>first version
+<br>Usage: <br><code>./rate_loader -url=http://hostname:318484/worker -rate=20</code>
+<p>alternative version
+<br>Usage: <br><code>./rate_loader_v2 -url=http://hostname:318484/worker -rate=20</code>
 <p><p>Run <code>go get -d -v</code> to download the dependencies

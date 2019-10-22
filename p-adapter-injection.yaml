@@ -1,0 +1,61 @@
+    rules:
+    - seriesQuery: '{__name__= "myWorker_client_connected"}'
+      seriesFilters: []
+      resources:
+        overrides:
+          k8s_namespace:
+            resource: namespace
+          k8s_pod_name:
+            resource: pod
+      name:
+        matches: "myWorker_client_connected"
+        as: ""
+      metricsQuery: <<.Series>>{<<.LabelMatchers>>,container_name!="POD"}
+    - seriesQuery: '{__name__= "myWorker_requests_total"}'
+      seriesFilters: []
+      resources:
+        overrides:
+          k8s_namespace:
+            resource: namespace
+            k8s_pod_name:
+              resource: pod
+        name:
+          matches: "myWorker_requests_total"
+          as: ""
+        metricsQuery: <<.Series>>{<<.LabelMatchers>>,container_name!="POD"}
+    - seriesQuery: '{__name__= "myWorker_response_time_bucket"}'
+      seriesFilters: []
+      resources:
+        overrides:
+          k8s_namespace:
+            resource: namespace
+          k8s_pod_name:
+            resource: pod
+      name:
+        matches: "myWorker_response_time_bucket"
+        as: ""
+      metricsQuery: <<.Series>>{<<.LabelMatchers>>,container_name!="POD"}
+    - seriesQuery: '{__name__= "myWorker_response_time_count"}'
+      seriesFilters: []
+      resources:
+        overrides:
+          k8s_namespace:
+            resource: namespace
+          k8s_pod_name:
+            resource: pod
+      name:
+        matches: "myWorker_response_time_count"
+        as: ""
+      metricsQuery: <<.Series>>{<<.LabelMatchers>>,container_name!="POD"}
+    - seriesQuery: '{__name__= "myWorker_response_time_sum"}'
+      seriesFilters: []
+      resources:
+        overrides:
+          k8s_namespace:
+            resource: namespace
+          k8s_pod_name:
+            resource: pod
+      name:
+        matches: "myWorker_response_time_sum"
+        as: ""
+      metricsQuery: <<.Series>>{<<.LabelMatchers>>,container_name!="POD"}
