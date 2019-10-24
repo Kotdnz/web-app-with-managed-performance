@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"flag"
 	"time"
 	"sync"
@@ -41,7 +42,7 @@ func curl(s string, wg *sync.WaitGroup, mutex *sync.Mutex) {
 	defer wg.Done()
 	resp, err := http.Get(s)
 	if err != nil {
-		fmt.Printf("Error: Something went wrong - can't Get the URL\n")
+		log.Fatal(err)
 	} else {
 		defer resp.Body.Close()
 		mutex.Lock()
