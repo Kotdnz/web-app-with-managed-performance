@@ -21,7 +21,7 @@ var okSum int64
 var erSum int64
 
 // continues print the pates
-func printRate(){
+func printRate(mutex *sync.Mutex){
 	for {
 		time.Sleep(time.Second * 5)
 		fmt.Printf("Updated every 5 sec\n" +
@@ -29,8 +29,10 @@ func printRate(){
 							 " - Current threads: %d\n" +
 							 " - Amount 200: %d, amount 500: %d\n",
 							 curRate, curThread, okSum, erSum)
-		erSum = 0
-    okSum = 0
+		mutex.Lock()
+			erSum = 0
+	    okSum = 0
+		mutex.Unlock()
 	}
 }
 
@@ -42,14 +44,14 @@ func curl(s string, wg *sync.WaitGroup, mutex *sync.Mutex) {
 	}
 	defer resp.Body.Close()
 	mutex.Lock()
-	if resp.StatusCode == 200 {
-		okSum += 1
-	} else {
-		erSum += 1
-	}
-	if curThread > 0 {
-		curThread -= 1
-	}
+		if resp.StatusCode == 200 {
+			okSum += 1
+		} else {
+			erSum += 1
+		}
+		if curThread > 0 {
+			curThread -= 1
+		}
 	mutex.Unlock()
 	wg.Done()
 }
@@ -75,7 +77,7 @@ func main() {
 	// mutex:
 	var mutex sync.Mutex
 	// show the current rate every 5 sec
-	go printRate()
+	go printRate(&mutex)
 	// main cycle
   for {
 		if curThread < 1023{
