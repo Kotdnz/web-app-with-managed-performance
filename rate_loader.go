@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"flag"
 	"time"
+	"sync"
   "net/http"
   "github.com/paulbellamy/ratecounter"
 )
@@ -34,7 +35,7 @@ func printRate(){
 }
 
 // thread function to curl
-func curl(s string) {
+func curl(s string, wg *sync.WaitGroup) {
 	resp, err := http.Get(s)
 	if err != nil {
 		fmt.Printf("Error: Something went wrong - can't Get the URL")
@@ -44,10 +45,11 @@ func curl(s string) {
 	} else {
 		erSum += 1
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 	if curThread > 0 {
 		curThread -= 1
 	}
+	wg.Done()
 }
 
 func main() {
@@ -66,6 +68,8 @@ func main() {
 	counter := ratecounter.NewRateCounter(1 * time.Second)
   // init thread counter
 	curThread = 0
+	// WaitGroups: To wait for multiple goroutines to finish, we can use a wait group.
+	var wg sync.WaitGroup
 	// show the current rate every 5 sec
 	go printRate()
 	// main cycle
@@ -73,11 +77,13 @@ func main() {
 		if curThread < 1023{
 			curThread += 1
 			counter.Incr(1)
+			wg.Add(1)
 			curRate = counter.Rate()
 			// from command prompt read requests rate to calculate the timeout
 			// sec / rate
 	    time.Sleep(1000 * time.Millisecond / time.Duration(*ratePtr))
-	    go curl(*urlPtr)
+	    go curl(*urlPtr, &wg)
  		}
   }
+	wg.Wait()
 }
