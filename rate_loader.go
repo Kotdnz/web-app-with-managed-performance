@@ -38,22 +38,23 @@ func printRate(mutex *sync.Mutex){
 
 // thread function to curl
 func curl(s string, wg *sync.WaitGroup, mutex *sync.Mutex) {
+	defer wg.Done()
 	resp, err := http.Get(s)
 	if err != nil {
-		fmt.Printf("Error: Something went wrong - can't Get the URL")
+		fmt.Printf("Error: Something went wrong - can't Get the URL\n")
+	} else {
+		defer resp.Body.Close()
+		mutex.Lock()
+			if resp.StatusCode == 200 {
+				okSum += 1
+			} else {
+				erSum += 1
+			}
+			if curThread > 0 {
+				curThread -= 1
+			}
+		mutex.Unlock()
 	}
-	defer resp.Body.Close()
-	mutex.Lock()
-		if resp.StatusCode == 200 {
-			okSum += 1
-		} else {
-			erSum += 1
-		}
-		if curThread > 0 {
-			curThread -= 1
-		}
-	mutex.Unlock()
-	wg.Done()
 }
 
 func main() {
@@ -82,7 +83,7 @@ func main() {
   for {
 		if curThread < 1023{
 			mutex.Lock()
-			curThread += 1
+				curThread += 1
 			mutex.Unlock()
 			counter.Incr(1)
 			wg.Add(1)
