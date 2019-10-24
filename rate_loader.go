@@ -35,20 +35,22 @@ func printRate(){
 }
 
 // thread function to curl
-func curl(s string, wg *sync.WaitGroup) {
+func curl(s string, wg *sync.WaitGroup, mutex *sync.Mutex) {
 	resp, err := http.Get(s)
 	if err != nil {
 		fmt.Printf("Error: Something went wrong - can't Get the URL")
 	}
+	defer resp.Body.Close()
+	mutex.Lock()
 	if resp.StatusCode == 200 {
 		okSum += 1
 	} else {
 		erSum += 1
 	}
-	defer resp.Body.Close()
 	if curThread > 0 {
 		curThread -= 1
 	}
+	mutex.Unlock()
 	wg.Done()
 }
 
@@ -70,19 +72,23 @@ func main() {
 	curThread = 0
 	// WaitGroups: To wait for multiple goroutines to finish, we can use a wait group.
 	var wg sync.WaitGroup
+	// mutex:
+	var mutex sync.Mutex
 	// show the current rate every 5 sec
 	go printRate()
 	// main cycle
   for {
 		if curThread < 1023{
+			mutex.Lock()
 			curThread += 1
+			mutex.Unlock()
 			counter.Incr(1)
 			wg.Add(1)
 			curRate = counter.Rate()
 			// from command prompt read requests rate to calculate the timeout
 			// sec / rate
 	    time.Sleep(1000 * time.Millisecond / time.Duration(*ratePtr))
-	    go curl(*urlPtr, &wg)
+	    go curl(*urlPtr, &wg, &mutex)
  		}
   }
 	wg.Wait()
