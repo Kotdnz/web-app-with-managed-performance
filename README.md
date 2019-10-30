@@ -25,3 +25,8 @@ For validation if our metrics is configured properly we using second tools
 <p>alternative version
 <br>Usage: <br><code>./rate_loader_v2 -url=http://hostname:318484/worker -rate=20</code>
 <p><p>Run <code>go get -d -v</code> to download the dependencies
+<p> In case of error like "2019/10/30 12:49:38 Get http://host:32685/worker: dial tcp 10.??.??.??:32685: connect: can't assign requested address
+exit status 1
+<br> Adjust the limits:
+<code>  net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_tw_reuse = 1</code>
